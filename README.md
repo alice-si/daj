@@ -1,6 +1,6 @@
 # Overview
 
-About Future Tokens ...
+DAJ - Money from the future by time-warping interest
 
 # Building
 
