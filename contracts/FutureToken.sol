@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-//import "./aave/tokenization/AToken.sol";
+import "./aave/tokenization/AToken.sol";
 import "./aave/lendingpool/LendingPool.sol";
 import "./aave/libraries/WadRayMath.sol";
 import "./Calendar.sol";
@@ -33,7 +33,6 @@ contract FutureToken is IERC1155 {
 
   mapping (uint256 => mapping(address => uint256)) internal balances;
 
-  //AToken public aToken;
   LendingPool public lendingPool;
   address public reserve;
 
@@ -76,15 +75,14 @@ contract FutureToken is IERC1155 {
   }
 
   function withdraw(uint256 _amount) external {
-    //lendingPool.deposit.value(msg.value)(reserve, _amount, 0);
-    //emit Deposit(msg.sender, _amount);
     uint256 period = this.getCurrentPeriod();
     require(this.balanceOf(msg.sender, period) >= _amount, "No enough funds available");
     _burn(msg.sender, period, _amount);
   }
 
-  function warp(uint256 _amount, uint256 _periodFrom, uint256 _periodTo) external {
+  function warp(uint256 _amount, uint256 _periodFrom, uint256 _periodTo) external payable {
     require(this.balanceOf(msg.sender, _periodFrom) >= _amount, "No enough funds available");
+    require(_periodTo >= this.getCurrentPeriod(), "Cannot transfer to the past");
 
     bool isForward = _periodTo > _periodFrom;
     uint256 periodDiff = isForward ? _periodTo.sub(_periodFrom): _periodFrom.sub(_periodTo);
@@ -92,12 +90,22 @@ contract FutureToken is IERC1155 {
 
     if (isForward) {
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].add(warpPrice);
+      //Redeem outstanding deposit from Aave pool
+      address aTokenAddress;
+      ( , , , , , , , , , , ,aTokenAddress, ) = lendingPool.getReserveData(reserve);
+      AToken aToken = AToken(aTokenAddress);
+      aToken.redeem(warpPrice);
+      msg.sender.transfer(warpPrice);
     } else {
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].sub(warpPrice);
+      //Add missing deposit to Aave pool
+      lendingPool.deposit.value(warpPrice)(reserve, warpPrice, 0);
     }
 
     balances[_periodFrom][msg.sender] = balances[_periodFrom][msg.sender].sub(_amount);
     balances[_periodTo][msg.sender] = balances[_periodTo][msg.sender].add(_amount);
+
+    emit TransferSingle(msg.sender, msg.sender, msg.sender, _periodTo, _amount);
   }
 
   function getCurrentPeriod() external view returns(uint256) {
@@ -140,16 +148,7 @@ contract FutureToken is IERC1155 {
     emit TransferSingle(msg.sender, msg.sender, _to, _id, _value);
   }
 
-  function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data) external {
-
-  }
-
-  function safeBatchTransferFrom(address _from, address _to, uint256[] calldata _ids, uint256[] calldata _values, bytes calldata _data) external {
-
-  }
-
-
-/**
+  /**
       @notice Get the balance of an account's Tokens.
       @param _owner  The address of the token holder
       @param _id     ID of the Token
@@ -174,12 +173,23 @@ contract FutureToken is IERC1155 {
     return balances[INTERESTS_SLOT][msg.sender];
   }
 
-  function balanceOfBatch(address[] calldata _owners, uint256[] calldata _ids) external view returns (uint256[] memory) {}
+  /**
+      Default payable function to accept money from Lending Pools
+   */
+  function() external payable { }
 
+  //IERC-1155 Functions to be implemented later
+  function balanceOfBatch(address[] calldata _owners, uint256[] calldata _ids) external view returns (uint256[] memory) {}
 
   function setApprovalForAll(address _operator, bool _approved) external {}
 
   function isApprovedForAll(address _owner, address _operator) external view returns (bool) {}
+
+  function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data) external { }
+
+  function safeBatchTransferFrom(address _from, address _to, uint256[] calldata _ids, uint256[] calldata _values, bytes calldata _data) external { }
+
+
 
 
 }
