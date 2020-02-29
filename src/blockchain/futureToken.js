@@ -30,6 +30,17 @@ export async function spaceTransfer(_to, _id, _amount) {
   console.log(tx);
 }
 
+export async function timeTransfer(_to, _id, _amount) {
+  console.log("Transferring in time: " + _amount + " to: " + _to + " from period: " + _id);
+  let fc = await getFutureToken();
+  let wei = web3.toWei(_amount/SCALING_FACTOR, 'ether');
+  let price = _to < _id ? await fc.getWarpPrice(wei, _id-_to) : 0;
+  console.log("Paying price: " + price);
+  let tx = await fc.warp(wei, _id, _to, {value: price});
+
+  console.log(tx);
+}
+
 export async function getBalances() {
   console.log("Getting balances...");
   let fc = await getFutureToken();

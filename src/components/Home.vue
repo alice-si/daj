@@ -35,7 +35,7 @@
           v-model="time">
         </range-slider>
 
-        <div class="text">and get <b> {{interest}} </b> {{selectedCurrency.title}} worth $<b>{{interestsUSD}}</b> now!</div>
+        <div class="text">and get <b> {{interest}} </b> {{selectedCurrency.title}} ( $<b>{{interestsUSD}}</b> ) now!</div>
 
         <div style="text-align: center">
           <md-button id="deposit-button" class="md-raised md-accent" @click="makeDeposit">Deposit</md-button>
@@ -83,7 +83,7 @@
     <md-dialog :md-active.sync="showModal">
       <div class="container">
         <img src="https://i.giphy.com/media/xT8qB50yhFINpFTymI/giphy.webp" alt="Snow" style="width:100%;">
-        <div class="top-left">Transferring your interests from the future ...</div>
+        <div class="image-overlay">Transferring your interests from the future ...</div>
       </div>
     </md-dialog>
 
@@ -217,11 +217,15 @@
     color: white;
   }
 
-  .top-left {
+  .image-overlay {
     position: absolute;
     top: 30px;
     left: 40px;
     font-size: 24px;
+  }
+
+  .range-slider-fill {
+    background-color: #E84F89;
   }
 
 

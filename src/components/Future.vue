@@ -103,11 +103,21 @@
         </md-tab>
 
         <md-tab md-label="In time">
-          <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ullam mollitia dolorum dolores quae commodi impedit possimus qui, atque at voluptates cupiditate. Neque quae culpa suscipit praesentium inventore ducimus ipsa aut.</p>
-          <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ullam mollitia dolorum dolores quae commodi impedit possimus qui, atque at voluptates cupiditate. Neque quae culpa suscipit praesentium inventore ducimus ipsa aut.</p>
-          <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ullam mollitia dolorum dolores quae commodi impedit possimus qui, atque at voluptates cupiditate. Neque quae culpa suscipit praesentium inventore ducimus ipsa aut.</p>
-          <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ullam mollitia dolorum dolores quae commodi impedit possimus qui, atque at voluptates cupiditate. Neque quae culpa suscipit praesentium inventore ducimus ipsa aut.</p>
-          <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ullam mollitia dolorum dolores quae commodi impedit possimus qui, atque at voluptates cupiditate. Neque quae culpa suscipit praesentium inventore ducimus ipsa aut.</p>
+          <form novalidate>
+            <div class="form-container">
+              <md-field>
+                <label for="timeValue">Value (max: {{this.selectedMax}})</label>
+                <md-input name="timeValue" id="timeValue" v-model="timeValue" />
+              </md-field>
+
+              <md-field>
+                <label for="timeTarget">Target month</label>
+                <md-input name="timeTarget" id="timeTarget" v-model="timeTarget" />
+              </md-field>
+            </div>
+
+            <md-button class="md-primary md-raised" @click="transferInTime()">Transfer</md-button>
+          </form>
         </md-tab>
 
       </md-tabs>
@@ -115,8 +125,15 @@
 
     <md-dialog :md-active.sync="showSpaceTransferModal">
       <div class="container">
+        <img src="https://media2.giphy.com/media/pZdilWYCMEEus/giphy.gif?cid=790b761182bf4ed027d156fc665d39b1dc7b4082c2f482b6&rid=giphy.gif" alt="Snow" style="width:100%;">
+        <div class="image-overlay">Transferring your tokens in space</div>
+      </div>
+    </md-dialog>
+
+    <md-dialog :md-active.sync="showTimeTransferModal">
+      <div class="container">
         <img src="https://i.giphy.com/media/xT8qB50yhFINpFTymI/giphy.webp" alt="Snow" style="width:100%;">
-        <div class="top-left">Transferring your tokens in space ...</div>
+        <div class="image-overlay">Transferring your tokens in time ...</div>
       </div>
     </md-dialog>
 
@@ -125,7 +142,7 @@
 </template>
 
 <script>
-  import {getBalances, spaceTransfer} from '@/blockchain/futureToken'
+  import {getBalances, spaceTransfer, timeTransfer} from '@/blockchain/futureToken'
   import {getLendingConfig, getReserveData} from '@/blockchain/aave'
   import {deployFutureCoin} from '@/blockchain/deployer'
   import RangeSlider from 'vue-range-slider'
@@ -144,7 +161,10 @@
         selectedPeriod: 0,
         spaceAddress: "0x4a0d2F7d6F41c0D2AE424Ff240ca7A19cbe23dA3",
         spaceValue: 0,
-        showSpaceTransferModal: false
+        showSpaceTransferModal: false,
+        showTimeTransferModal: false,
+        timeValue: 0.01,
+        timeTarget: 10
       }
     },
     beforeCreate: async function () {
@@ -164,6 +184,17 @@
         await spaceTransfer(this.spaceAddress, this.selectedPeriod, this.spaceValue);
         this.showSpaceTransferModal = false;
         this.balances = await getBalances();
+      },
+      transferInTime: async function () {
+        console.log("Transferring in time: " + this.timeValue + " from: " + this.selectedPeriod + " to: " + this.timeTarget);
+        this.showTransferDialog = false;
+        this.showTimeTransferModal = true;
+        try {
+          await timeTransfer(this.timeTarget -1, this.selectedPeriod, this.timeValue);
+          this.balances = await getBalances();
+        } finally {
+          this.showTimeTransferModal = false;
+        }
       }
     }
   }
@@ -196,6 +227,14 @@
 
   .md-table-cell-container {
     padding: 0 !important;
+  }
+
+  .image-overlay {
+    position: absolute;
+    top: 30px;
+    left: 20px;
+    font-size: 24px;
+    color: white;
   }
 
 

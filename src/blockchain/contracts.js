@@ -14,7 +14,7 @@ var setup = async function(json) {
   c.setProvider(web3.currentProvider);
   c.defaults({
     from: main,
-    gas: 6500000
+    gas: 7000000
   });
   return c;
 };
