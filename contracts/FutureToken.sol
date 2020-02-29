@@ -134,6 +134,12 @@ contract FutureToken is IERC1155 {
     emit TransferSingle(msg.sender, owner, address(0), id, value);
   }
 
+  function spaceTransfer(address _to, uint256 _id, uint256 _value) external {
+    balances[_id][msg.sender] = balances[_id][msg.sender].sub(_value);
+    balances[_id][_to] = balances[_id][_to].add(_value);
+    emit TransferSingle(msg.sender, msg.sender, _to, _id, _value);
+  }
+
   function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data) external {
 
   }

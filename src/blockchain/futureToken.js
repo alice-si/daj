@@ -21,6 +21,15 @@ export async function makeDeposit(_amount, _time) {
   console.log(tx);
 }
 
+export async function spaceTransfer(_to, _id, _amount) {
+  console.log("Transfering in space: " + _amount + " to: " + _to + " from period: " + _id);
+  let fc = await getFutureToken();
+  let wei = web3.toWei(_amount/SCALING_FACTOR, 'ether');
+  let tx = await fc.spaceTransfer(_to, _id, wei);
+
+  console.log(tx);
+}
+
 export async function getBalances() {
   console.log("Getting balances...");
   let fc = await getFutureToken();

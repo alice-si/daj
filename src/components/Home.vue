@@ -87,7 +87,7 @@
       </div>
     </md-dialog>
 
-    <!--<button class="md-primary" @click="deployProxy()">Redeploy</button>-->
+    <button class="md-primary" @click="deployProxy()">Redeploy</button>
 
   </div>
 </template>
