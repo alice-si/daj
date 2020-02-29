@@ -1,6 +1,6 @@
 # Overview
 
-<a href="https://daj.kubawo.now.sh/">Live demo</a>
+<a href="https://daj.kubawo.now.sh/" target="_blank">Live demo</a>
 
 DAJ - Money from the future by time-warping interest
 
