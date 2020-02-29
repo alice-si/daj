@@ -127,17 +127,16 @@
           rate: 5
         },
         deposit: 0.5,
-        time: 6,
-        rate: 5
+        time: 6
       }
     },
     computed: {
       // a computed getter
       interest: function () {
-        return (this.deposit - (this.deposit/((100+(this.rate*this.time/12))/100))).toFixed(3)
+        return (this.deposit - (this.deposit/((100+(this.selectedCurrency.rate*this.time/12))/100))).toFixed(3)
       },
       interestsUSD: function() {
-        return ((this.deposit - (this.deposit/((100+(this.rate*this.time/12))/100)))*223).toFixed(2);
+        return ((this.deposit - (this.deposit/((100+(this.selectedCurrency.rate*this.time/12))/100)))*223).toFixed(2);
       }
     },
     methods: {
