@@ -11,7 +11,7 @@ library Calendar {
   uint256 internal constant YEAR_START = 1577836800;
 
   function getCurrentMonth() internal view returns (uint256) {
-    return (now - YEAR_START) / 30 days + 1;
+    return (now - YEAR_START) / 30 days;
   }
 
 }

@@ -7,14 +7,23 @@ contract('Future token', function ([owner, oracle, reserve, pool]) {
   var ft, currentPeriod;
 
   before("deploy future coin", async function () {
-    ft = await FT.new(oracle, reserve, pool);
-    await ft.setInterestRates(1000, {from: oracle});
+    ft = await FT.new(oracle, 1000, reserve, pool);
+    //await ft.setInterestRates(1000, {from: oracle});
   });
 
 
   it("should calculate correct period", async function () {
     currentPeriod = await ft.getCurrentPeriod();
-    currentPeriod.should.be.bignumber.equal("2");
+    currentPeriod.should.be.bignumber.equal("3");
+  });
+
+
+  it("should calculate warping prices", async function () {
+    let base = 1000000000;
+    let priceForward = await ft.getWarpPrice(base, 12, true);
+    console.log("Price forward: " + priceForward);
+    let priceBackward = await ft.getWarpPrice(base-priceForward, 12, false);
+    console.log("Price forward: " + priceBackward);
   });
 
 

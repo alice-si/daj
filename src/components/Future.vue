@@ -52,7 +52,6 @@
                   <md-table-cell><b>{{balances[12] && balances[12].toFixed(2)}}</b></md-table-cell>
                   <md-table-cell><b>{{balances[77] && balances[77].toFixed(5)}} (${{balances[77] && (balances[77]*223).toFixed(2)}})</b></md-table-cell>
                   <md-table-cell v-for="i in 12" :key="i">
-
                       <md-button class="md-fab md-mini" style="color: white;" v-if="balances[i - 1] > 0"
                                  @click="transfer(balances[i - 1], i-1)">
                         {{balances[i - 1]}}
@@ -64,7 +63,7 @@
               <md-table-row>
                 <md-table-cell>
                   <img src="https://testnet.aave.com/static/media/dai.59d423e0.svg"
-                       style="height: 24px; float: left; margin-right: 3px; margin-top: -3px;"> DAI
+                       style="height: 24px; margin-right: 3px; margin-top: -3px;"> DAI
                 </md-table-cell>
                 <md-table-cell><b>0</b></md-table-cell>
                 <md-table-cell><b>0 ($0)</b></md-table-cell>
@@ -80,7 +79,7 @@
     </div>
 
 
-    <md-dialog :md-active.sync="showTransferDialog">
+    <md-dialog :md-active.sync="showTransferDialog" style="width: 500px; height: 350px;">
       <md-dialog-title>Transfer</md-dialog-title>
 
       <md-tabs md-dynamic-height>
@@ -98,7 +97,9 @@
               </md-field>
             </div>
 
-            <md-button class="md-primary md-raised" @click="transferInSpace()">Transfer</md-button>
+            <div style="text-align: center">
+              <md-button class="md-primary md-raised" @click="transferInSpace()">Transfer</md-button>
+            </div>
           </form>
         </md-tab>
 
@@ -110,14 +111,32 @@
                 <md-input name="timeValue" id="timeValue" v-model="timeValue" />
               </md-field>
 
-              <md-field>
-                <label for="timeTarget">Target month</label>
-                <md-input name="timeTarget" id="timeTarget" v-model="timeTarget" />
-              </md-field>
-            </div>
+              <div style="font-size: 12px; color: gray;">Target month: <b>{{timeTarget}}</b></div>
+                <!--<md-input name="timeTarget" id="timeTarget" v-model="timeTarget" />-->
+                <range-slider
+                  class="slider"
+                  min="3"
+                  max="12"
+                  step="1"
+                  v-model="timeTarget">
+                </range-slider>
 
-            <md-button class="md-primary md-raised" @click="transferInTime()">Transfer</md-button>
+
+              <div style="font-size: 14px;" v-if="price >= 0">You will receive: <span style="color: green;"><b>{{price}}</b> ETH (${{(price*223).toFixed(2)}})</span></div>
+
+              <div style="font-size: 14px;" v-if="price < 0">You will need to pay: <span style="color: red;"><b>{{price}}</b> ETH (${{(price*223).toFixed(2)}})</span></div>
+
+
+            </div>
+            <div style="text-align: center; margin-top: 10px;">
+              <md-button class="md-primary md-raised" @click="transferInTime()">Transfer</md-button>
+            </div>
           </form>
+        </md-tab>
+        <md-tab md-label="Withdraw" v-if="selectedPeriod === 2">
+          <div style="text-align: center">
+            <md-button class="md-accent md-raised" @click="withdraw()" >Withdraw</md-button>
+          </div>
         </md-tab>
 
       </md-tabs>
@@ -142,7 +161,7 @@
 </template>
 
 <script>
-  import {getBalances, spaceTransfer, timeTransfer} from '@/blockchain/futureToken'
+  import {getBalances, spaceTransfer, timeTransfer, withdraw} from '@/blockchain/futureToken'
   import {getLendingConfig, getReserveData} from '@/blockchain/aave'
   import {deployFutureCoin} from '@/blockchain/deployer'
   import RangeSlider from 'vue-range-slider'
@@ -159,12 +178,25 @@
         showTransferDialog: false,
         selectedMax: 0,
         selectedPeriod: 0,
-        spaceAddress: "0x4a0d2F7d6F41c0D2AE424Ff240ca7A19cbe23dA3",
+        spaceAddress: "",
         spaceValue: 0,
         showSpaceTransferModal: false,
         showTimeTransferModal: false,
-        timeValue: 0.01,
-        timeTarget: 10
+        timeValue: 0,
+        timeTarget: 0
+      }
+    },
+    computed: {
+      // a computed getter
+      price: function () {
+        let time = this.timeTarget - this.selectedPeriod - 1;
+        let formula = (100 + (5 * Math.abs(time) / 12)) / 100;
+        console.log("Formula: " + formula);
+        if (time > 0) {
+          return (this.timeValue - (this.timeValue / formula)).toFixed(5);
+        } else {
+          return -((this.timeValue*formula - this.timeValue).toFixed(5));
+        }
       }
     },
     beforeCreate: async function () {
@@ -174,6 +206,7 @@
       transfer(val, period) {
         this.selectedMax = val;
         this.selectedPeriod = period;
+        this.timeTarget = period + 1;
         console.log("Transferring max: " + this.selectedMax + " from: " + this.selectedPeriod);
         this.showTransferDialog = true;
       },
@@ -191,10 +224,26 @@
         this.showTimeTransferModal = true;
         try {
           await timeTransfer(this.timeTarget -1, this.selectedPeriod, this.timeValue);
+          if (this.timeTarget -1 > this.selectedPeriod) {
+            let toast = this.$toasted.show("You've just earned $" + (this.price*223).toFixed(2) + " interests !", {
+              theme: "bubble",
+              position: "top-center",
+              duration: 5000,
+              icon: 'sentiment_satisfied_alt'
+            });
+          }
           this.balances = await getBalances();
         } finally {
           this.showTimeTransferModal = false;
         }
+      },
+      withdraw: async function () {
+        console.log("Withdraw: " + this.selectedMax);
+        this.showTransferDialog = false;
+        this.showSpaceTransferModal = true;
+        await withdraw(this.selectedMax);
+        this.showSpaceTransferModal = false;
+        this.balances = await getBalances();
       }
     }
   }
@@ -235,6 +284,22 @@
     left: 20px;
     font-size: 24px;
     color: white;
+  }
+
+  .range-slider {
+    padding: 0;
+  }
+
+  .slider {
+    width: 470px !important;
+  }
+
+  .range-slider-fill {
+    background-color: #E84F89;
+  }
+
+  .md-dialog-container {
+    width: 500px;
   }
 
 

@@ -87,7 +87,7 @@
       </div>
     </md-dialog>
 
-    <button class="md-primary" @click="deployProxy()">Redeploy</button>
+    <!--<button class="md-primary" @click="deployProxy()">Redeploy</button>-->
 
   </div>
 </template>
@@ -138,6 +138,9 @@
       interestsUSD: function() {
         return ((this.deposit - (this.deposit/((100+(this.selectedCurrency.rate*this.time/12))/100)))*223).toFixed(2);
       }
+    },
+    beforeCreate: async function () {
+      window.redeploy = deployFutureToken;
     },
     methods: {
       getData: async function () {

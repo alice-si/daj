@@ -57,7 +57,7 @@ contract FutureToken is IERC1155 {
    * @dev validates the transfer before allowing it. NOTE: This is not standard ERC20 behavior
    **/
   function deposit(uint256 _amount, uint256 periodDiff) external payable {
-    uint256 interests = getWarpPrice(_amount, periodDiff);
+    uint256 interests = getWarpPrice(_amount, periodDiff, true);
     uint256 currentPeriod = this.getCurrentPeriod();
 
     //Deposit to lending pool
@@ -77,7 +77,16 @@ contract FutureToken is IERC1155 {
   function withdraw(uint256 _amount) external {
     uint256 period = this.getCurrentPeriod();
     require(this.balanceOf(msg.sender, period) >= _amount, "No enough funds available");
-    _burn(msg.sender, period, _amount);
+
+    //Return funds from Aave
+    address aTokenAddress;
+    ( , , , , , , , , , , ,aTokenAddress, ) = lendingPool.getReserveData(reserve);
+    AToken aToken = AToken(aTokenAddress);
+    uint256 toRedeem = _amount > aToken.balanceOf(address(this)) ?  aToken.balanceOf(address(this)) : _amount;
+    aToken.redeem(toRedeem);
+    msg.sender.transfer(toRedeem);
+
+    _burn(msg.sender, period, toRedeem);
   }
 
   function warp(uint256 _amount, uint256 _periodFrom, uint256 _periodTo) external payable {
@@ -86,7 +95,7 @@ contract FutureToken is IERC1155 {
 
     bool isForward = _periodTo > _periodFrom;
     uint256 periodDiff = isForward ? _periodTo.sub(_periodFrom): _periodFrom.sub(_periodTo);
-    uint256 warpPrice = getWarpPrice(_amount, periodDiff);
+    uint256 warpPrice = getWarpPrice(_amount, periodDiff, isForward);
 
     if (isForward) {
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].add(warpPrice);
@@ -97,7 +106,8 @@ contract FutureToken is IERC1155 {
       aToken.redeem(warpPrice);
       msg.sender.transfer(warpPrice);
     } else {
-      balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].sub(warpPrice);
+      uint256 effectivePrice = warpPrice > balances[INTERESTS_SLOT][msg.sender] ? balances[INTERESTS_SLOT][msg.sender] : warpPrice;
+      balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].sub(effectivePrice);
       //Add missing deposit to Aave pool
       lendingPool.deposit.value(warpPrice)(reserve, warpPrice, 0);
     }
@@ -113,8 +123,13 @@ contract FutureToken is IERC1155 {
   }
 
 
-  function getWarpPrice(uint256 _amount, uint256 _periodDiff) public view returns(uint256) {
-    return _amount.sub(_amount.div(MAX_RATE.add(interestRate.mul(_periodDiff).div(12))).mul(MAX_RATE));
+  function getWarpPrice(uint256 _amount, uint256 _periodDiff, bool isForward) public view returns(uint256) {
+    uint256 formula = MAX_RATE.add(interestRate.mul(_periodDiff).div(12));
+    if (isForward) {
+        return _amount.sub(_amount.mul(MAX_RATE).div(formula));
+    } else {
+        return _amount.mul(formula).div(MAX_RATE).sub(_amount);
+    }
   }
 
   /**
