@@ -1,13 +1,14 @@
 import { getMainAccount } from "./network.js";
 import state from "@/state";
 import {getWeb3} from "./network";
+import { getDaiToken } from "./contracts.js";
 
 export async function getWalletBalance() {
   let main = await getMainAccount();
   //state.balance.tokens = parseInt(web3.fromWei(await ausd.balanceOf(main), 'ether'));
 }
 
-export async function getEthBalance() {
+async function getEthBalance() {
   let main = await getMainAccount();
   let web3 = await getWeb3();
   return new Promise((resolve, reject) => {
@@ -17,4 +18,17 @@ export async function getEthBalance() {
       resolve(state.balance.eth);
     })
   });
+}
+
+async function getDaiBalance() {
+  let main = await getMainAccount();
+  let dai = await getDaiToken();
+  let balance = await dai.balanceOf(main);
+  state.balance.dai = parseFloat(web3.fromWei(balance, 'ether'));
+  console.log("Dai balance: " + state.balance.dai);
+}
+
+export async function getBalances() {
+  await getEthBalance();
+  await getDaiBalance();
 }

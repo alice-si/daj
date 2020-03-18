@@ -4,6 +4,7 @@ import { getWeb3, getMainAccount } from "./network.js";
 import LENDING_POOL_JSON from '@contracts/LendingPool.json'
 import FUTURE_TOKEN_JSON from '@contracts/FutureToken.json'
 import IR_STRATEGY_JSON from '@contracts/DefaultReserveInterestRateStrategy.json'
+import ERC20_JSON from '@contracts/ERC20.json'
 
 import deployment from './deployment.json';
 
@@ -19,7 +20,7 @@ var setup = async function(json) {
   return c;
 };
 
-var ft, ir;
+var ft, ir, dai;
 
 export async function getFUTURE_TOKEN() {
   return await setup(FUTURE_TOKEN_JSON);
@@ -52,6 +53,16 @@ export async function getFutureToken() {
     console.log("Linked future token: " + ft.address);
   }
   return ft;
+}
+
+
+export async function getDaiToken() {
+  if (dai === undefined) {
+    let DAI = await setup(ERC20_JSON);
+    dai = await DAI.at(deployment.DAI);
+    console.log("Linked dai token: " + dai.address);
+  }
+  return dai;
 }
 
 
