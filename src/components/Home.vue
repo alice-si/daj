@@ -9,7 +9,7 @@
       <div class="md-layout-item md-size-70">
 
         <div class="text">I want to deposit <span class="dinput">{{deposit.toFixed(2)}}</span>
-          <v-select :options="options" label="title" v-model="selectedCurrency">
+          <v-select :options="currencies" label="title" v-model="selectedCurrency">
             <template v-slot:option="option">
               <!--<img :src="option.icon" style="height: 32px;" alt="Avatar">-->
               {{ option.title }}
@@ -20,7 +20,7 @@
         <range-slider
           class="slider"
           min="0"
-          max="1"
+          :max="balance.eth"
           step="0.01"
           v-model="deposit">
         </range-slider>
@@ -53,6 +53,7 @@
           <md-card-header-text>
             <div class="md-title">ETH</div>
             <div class="md-subhead"><b>5%</b> APY</div>
+            Balance: <b>{{balance.eth.toFixed(3)}} </b>
           </md-card-header-text>
 
           <md-card-media>
@@ -96,6 +97,8 @@
   import { getLendingData, makeDeposit} from '@/blockchain/futureToken'
   import { getLendingConfig, getReserveData} from '@/blockchain/aave'
   import { deployFutureToken} from '@/blockchain/deployer'
+  import { getEthBalance } from '@/blockchain/wallet'
+  import State from '@/state'
   import RangeSlider from 'vue-range-slider'
   import 'vue-range-slider/dist/vue-range-slider.css'
   import 'vue-select/dist/vue-select.css';
@@ -109,7 +112,8 @@
     data() {
       return {
         showModal: false,
-        options: [
+        balance: State.balance,
+        currencies: [
           {
             icon: 'https://testnet.aave.com/static/media/eth.1a64eee6.svg',
             title: 'ETH',
@@ -121,17 +125,16 @@
             rate: 10
           }
         ],
-        selectedCurrency: {
-          icon: 'https://testnet.aave.com/static/media/eth.1a64eee6.svg',
-          title: 'ETH',
-          rate: 5
-        },
-        deposit: 0.5,
+        selectedCurrencyIndex: 0,
+        deposit: 0,
         time: 6
       }
     },
     computed: {
       // a computed getter
+      selectedCurrency: function() {
+        return this.currencies[this.selectedCurrencyIndex];
+      },
       interest: function () {
         return (this.deposit - (this.deposit/((100+(this.selectedCurrency.rate*this.time/12))/100))).toFixed(3)
       },
@@ -141,6 +144,8 @@
     },
     beforeCreate: async function () {
       window.redeploy = deployFutureToken;
+      await getEthBalance();
+      this.deposit = this.balance.eth/2;
     },
     methods: {
       getData: async function () {
