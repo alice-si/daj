@@ -20,7 +20,7 @@ var setup = async function(json) {
   return c;
 };
 
-var ft, ir, dai;
+var ft, ir, dai, pool;
 
 export async function getFUTURE_TOKEN() {
   return await setup(FUTURE_TOKEN_JSON);
@@ -64,5 +64,7 @@ export async function getDaiToken() {
   }
   return dai;
 }
+
+
 
 

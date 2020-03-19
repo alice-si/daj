@@ -29,5 +29,14 @@ export async function getReserveData() {
   console.log(data.liquidityRate.toString());
 }
 
+export async function depositDai() {
+  console.log("Getting reserve data");
+  let pool = await getLendingPool();
+  let wei = web3.toWei(1, 'ether');
+  let tx = await pool.deposit(deployment.DAI_RESERVE, wei, 0);
+  console.log(tx);
+
+}
+
 
 

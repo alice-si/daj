@@ -95,7 +95,7 @@
 
 <script>
   import { getLendingData, makeDeposit} from '@/blockchain/futureToken'
-  import { getLendingConfig, getReserveData} from '@/blockchain/aave'
+  import { getLendingConfig, getReserveData, depositDai } from '@/blockchain/aave'
   import { deployFutureToken} from '@/blockchain/deployer'
   import { getBalances } from '@/blockchain/wallet'
   import State from '@/state'
@@ -175,19 +175,20 @@
         await deployFutureToken();
       },
       makeDeposit: async function () {
-        this.showModal = true;
-        try {
-          await makeDeposit(this.deposit, this.time);
-          this.$router.push({path: '/future'});
-          let toast = this.$toasted.show("You've just earned $" + this.interestsUSD + " interests !", {
-            theme: "bubble",
-            position: "top-center",
-            duration : 5000,
-            icon : 'sentiment_satisfied_alt'
-          });
-        } finally {
-          this.showModal = false;
-        }
+        // this.showModal = true;
+        // try {
+        //   await makeDeposit(this.deposit, this.time);
+        //   this.$router.push({path: '/future'});
+        //   let toast = this.$toasted.show("You've just earned $" + this.interestsUSD + " interests !", {
+        //     theme: "bubble",
+        //     position: "top-center",
+        //     duration : 5000,
+        //     icon : 'sentiment_satisfied_alt'
+        //   });
+        // } finally {
+        //   this.showModal = false;
+        // }
+        depositDai();
 
 
       }
