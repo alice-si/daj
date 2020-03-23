@@ -1,8 +1,10 @@
 # Overview
 
-<a href="https://daj.kubawo.now.sh/" target="_blank">Live demo</a>
+DAJ - Get your future interest at warp velocity
 
-DAJ - Money from the future by time-warping interest
+- <a href="https://daj.kubawo.now.sh/" target="_blank">Live demo</a>
+- Daj was an ETHLondon finalist. Read the <a href="https://devpost.com/software/daj-get-your-future-interest-right-now" target="_blank">Devpost write-up</a> 
+
 
 # Building
 
