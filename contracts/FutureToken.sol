@@ -1,9 +1,9 @@
 pragma solidity ^0.5.0;
 
-import "./aave/tokenization/AToken.sol";
-import "./aave/lendingpool/LendingPool.sol";
+
 import "./aave/libraries/WadRayMath.sol";
 import "./Calendar.sol";
+import "./IExternalPool.sol";
 import "erc-1155/contracts/IERC1155.sol";
 
 /**
@@ -14,6 +14,8 @@ contract FutureToken is IERC1155 {
   using WadRayMath for uint256;
   using SafeMath for uint256;
 
+  uint256 internal constant MAX_RATE = 10000;
+  uint256 internal constant INTERESTS_SLOT = 7777777;
 
   /**
   * @dev emitted after the redeem action
@@ -28,23 +30,18 @@ contract FutureToken is IERC1155 {
     _;
   }
 
-  uint256 internal constant MAX_RATE = 10000;
-  uint256 internal constant INTERESTS_SLOT = 7777777;
-
   mapping (uint256 => mapping(address => uint256)) internal balances;
 
-  LendingPool public lendingPool;
-  address public reserve;
+  IExternalPool public externalPool;
 
   //An oracle authorized to set interest rates
   address public interestRatesOracle;
 
+  //Current interest rate for new deposits and time-travelling
   uint256 public interestRate;
 
-  constructor(address _interestRatesOracle, uint256 _interestRate, address _reserve, LendingPool _lendingPool) public {
-    reserve = _reserve;
-    lendingPool = _lendingPool;
-    interestRate = _interestRate;
+  constructor(address _interestRatesOracle, IExternalPool _externalPool) public {
+    externalPool = _externalPool;
     interestRatesOracle = _interestRatesOracle;
   }
 
@@ -62,7 +59,7 @@ contract FutureToken is IERC1155 {
 
     //Deposit to lending pool
     uint256 lendingPoolDeposit = _amount.sub(interests);
-    lendingPool.deposit.value(lendingPoolDeposit)(reserve, lendingPoolDeposit, 0);
+    externalPool.deposit.value(lendingPoolDeposit)(lendingPoolDeposit);
 
     //Update internal ledger
     _mint(msg.sender, currentPeriod.add(periodDiff), _amount);
@@ -74,16 +71,16 @@ contract FutureToken is IERC1155 {
     emit Deposit(msg.sender, _amount, interests);
   }
 
+
+
   function withdraw(uint256 _amount) external {
     uint256 period = this.getCurrentPeriod();
     require(this.balanceOf(msg.sender, period) >= _amount, "No enough funds available");
 
     //Return funds from Aave
-    address aTokenAddress;
-    ( , , , , , , , , , , ,aTokenAddress, ) = lendingPool.getReserveData(reserve);
-    AToken aToken = AToken(aTokenAddress);
-    uint256 toRedeem = _amount > aToken.balanceOf(address(this)) ?  aToken.balanceOf(address(this)) : _amount;
-    aToken.redeem(toRedeem);
+    uint256 lendingPoolBalance = externalPool.balanceOf(address(this));
+    uint256 toRedeem = _amount > lendingPoolBalance ? lendingPoolBalance : _amount;
+    externalPool.withdraw(toRedeem);
     msg.sender.transfer(toRedeem);
 
     _burn(msg.sender, period, toRedeem);
@@ -99,17 +96,13 @@ contract FutureToken is IERC1155 {
 
     if (isForward) {
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].add(warpPrice);
-      //Redeem outstanding deposit from Aave pool
-      address aTokenAddress;
-      ( , , , , , , , , , , ,aTokenAddress, ) = lendingPool.getReserveData(reserve);
-      AToken aToken = AToken(aTokenAddress);
-      aToken.redeem(warpPrice);
+      externalPool.withdraw(warpPrice);
       msg.sender.transfer(warpPrice);
     } else {
       uint256 effectivePrice = warpPrice > balances[INTERESTS_SLOT][msg.sender] ? balances[INTERESTS_SLOT][msg.sender] : warpPrice;
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].sub(effectivePrice);
       //Add missing deposit to Aave pool
-      lendingPool.deposit.value(warpPrice)(reserve, warpPrice, 0);
+      externalPool.deposit(warpPrice);
     }
 
     balances[_periodFrom][msg.sender] = balances[_periodFrom][msg.sender].sub(_amount);
@@ -203,8 +196,5 @@ contract FutureToken is IERC1155 {
   function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data) external { }
 
   function safeBatchTransferFrom(address _from, address _to, uint256[] calldata _ids, uint256[] calldata _values, bytes calldata _data) external { }
-
-
-
 
 }
