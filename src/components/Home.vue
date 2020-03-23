@@ -175,22 +175,19 @@
         await deployFutureToken();
       },
       makeDeposit: async function () {
-        // this.showModal = true;
-        // try {
-        //   await makeDeposit(this.deposit, this.time);
-        //   this.$router.push({path: '/future'});
-        //   let toast = this.$toasted.show("You've just earned $" + this.interestsUSD + " interests !", {
-        //     theme: "bubble",
-        //     position: "top-center",
-        //     duration : 5000,
-        //     icon : 'sentiment_satisfied_alt'
-        //   });
-        // } finally {
-        //   this.showModal = false;
-        // }
-        depositDai();
-
-
+        this.showModal = true;
+        try {
+          await makeDeposit(this.deposit, this.time);
+          this.$router.push({path: '/future'});
+          let toast = this.$toasted.show("You've just earned $" + this.interestsUSD + " interests !", {
+            theme: "bubble",
+            position: "top-center",
+            duration : 5000,
+            icon : 'sentiment_satisfied_alt'
+          });
+        } finally {
+          this.showModal = false;
+        }
       }
     }
   }

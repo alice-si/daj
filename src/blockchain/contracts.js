@@ -2,6 +2,7 @@ import contract from "truffle-contract";
 import { getWeb3, getMainAccount } from "./network.js";
 
 import LENDING_POOL_JSON from '@contracts/LendingPool.json'
+import AAVE_EXTERNAL_POOL_JSON from '@contracts/AaveExternalPool.json'
 import FUTURE_TOKEN_JSON from '@contracts/FutureToken.json'
 import IR_STRATEGY_JSON from '@contracts/DefaultReserveInterestRateStrategy.json'
 import ERC20_JSON from '@contracts/ERC20.json'
@@ -26,6 +27,10 @@ export async function getFUTURE_TOKEN() {
   return await setup(FUTURE_TOKEN_JSON);
 }
 
+export async function getAAVE_EXTERNAL_POOL() {
+  return await setup(AAVE_EXTERNAL_POOL_JSON);
+}
+
 
 export async function getLendingPool() {
   if (pool === undefined) {
@@ -40,19 +45,30 @@ export async function getInterestRatesStrategy() {
   if (ir === undefined) {
     let IR = await setup(IR_STRATEGY_JSON);
     ir = await FC.at(deployment.INTEREST_RATES_STRATEGY);
-    console.log("Linked future coin: " + ir.address);
+    console.log("Linked interest rates strategy: " + ir.address);
   }
   return ir;
 }
 
 
-export async function getFutureToken() {
+export async function getFutureToken(currency) {
   if (ft === undefined) {
     let FT = await setup(FUTURE_TOKEN_JSON);
-    ft = await FT.at(deployment.FUTURE_TOKEN);
-    console.log("Linked future token: " + ft.address);
+    ft = await FT.at(deployment['FUTURE_TOKEN_' +currency]);
+    console.log("Linked future token " + currency + ": " + ft.address);
   }
   return ft;
+}
+
+
+export async function getExternalPool(currency) {
+  let ft = await getFutureToken(currency);
+  //let externalPoolAddress = await ft.externalPool();
+  let externalPoolAddress = "0x00Ca1D94B89E1281218c4F50c74b424A559Cb67b";
+
+  let EXTERNAL_POOL = await getAAVE_EXTERNAL_POOL();
+  let pool = await EXTERNAL_POOL.at(externalPoolAddress);
+  return pool;
 }
 
 
