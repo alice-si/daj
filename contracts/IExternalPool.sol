@@ -9,7 +9,7 @@ interface IExternalPool {
 
   function deposit(uint256 amount) external payable;
 
-  function withdraw(uint256 amount) external;
+  function withdraw(uint256 amount, address payable beneficiary) external;
 
   function balanceOf(address account) external view returns(uint256);
 }

@@ -6,6 +6,7 @@ import "./Calendar.sol";
 import "./IExternalPool.sol";
 import "erc-1155/contracts/IERC1155.sol";
 
+
 /**
  * @title Future Token
  *
@@ -80,8 +81,7 @@ contract FutureToken is IERC1155 {
     //Return funds from Aave
     uint256 lendingPoolBalance = externalPool.balanceOf(address(this));
     uint256 toRedeem = _amount > lendingPoolBalance ? lendingPoolBalance : _amount;
-    externalPool.withdraw(toRedeem);
-    msg.sender.transfer(toRedeem);
+    externalPool.withdraw(toRedeem, msg.sender);
 
     _burn(msg.sender, period, toRedeem);
   }
@@ -96,8 +96,7 @@ contract FutureToken is IERC1155 {
 
     if (isForward) {
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].add(warpPrice);
-      externalPool.withdraw(warpPrice);
-      msg.sender.transfer(warpPrice);
+      externalPool.withdraw(warpPrice, msg.sender);
     } else {
       uint256 effectivePrice = warpPrice > balances[INTERESTS_SLOT][msg.sender] ? balances[INTERESTS_SLOT][msg.sender] : warpPrice;
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].sub(effectivePrice);

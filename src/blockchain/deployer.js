@@ -7,9 +7,18 @@ import {getMainAccount} from "./network";
 
 
 export async function deployAaveEthPool() {
-  console.log("Deploying Aave external pool...");
+  console.log("Deploying Aave external ETH pool...");
   let AAVE_EXTERNAL_POOL = await getAAVE_EXTERNAL_POOL();
   let aep = await AAVE_EXTERNAL_POOL.new(deployment.AAVE_ETH_RESERVE, deployment.LENDING_POOL);
+
+  console.log("Aave external ETH pool deployed: " + aep.address);
+  return aep;
+}
+
+export async function deployAaveDaiPool() {
+  console.log("Deploying Aave external DAI pool...");
+  let AAVE_EXTERNAL_POOL = await getAAVE_EXTERNAL_POOL();
+  let aep = await AAVE_EXTERNAL_POOL.new(deployment.AAVE_DAI_RESERVE, deployment.LENDING_POOL);
 
   console.log("Aave external ETH pool deployed: " + aep.address);
   return aep;

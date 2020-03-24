@@ -15,9 +15,9 @@ contract MockExternalPool is IExternalPool {
     balance += amount;
   }
 
-  function withdraw(uint256 amount) external {
+  function withdraw(uint256 amount, address payable beneficiary) external {
     balance -= amount;
-    msg.sender.transfer(amount);
+    beneficiary.transfer(amount);
   }
 
   function balanceOf(address account) external view returns(uint256) {
