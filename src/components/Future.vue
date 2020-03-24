@@ -29,19 +29,19 @@
                 <md-table-row>
                   <md-table-head>Currency</md-table-head>
                   <md-table-head>Total</md-table-head>
-                  <md-table-head>Interests</md-table-head>
-                  <md-table-head>I</md-table-head>
-                  <md-table-head>II</md-table-head>
-                  <md-table-head>III</md-table-head>
-                  <md-table-head>IV</md-table-head>
-                  <md-table-head>V</md-table-head>
-                  <md-table-head>VI</md-table-head>
-                  <md-table-head>VII</md-table-head>
-                  <md-table-head>VIII</md-table-head>
-                  <md-table-head>IX</md-table-head>
-                  <md-table-head>X</md-table-head>
-                  <md-table-head>XI</md-table-head>
-                  <md-table-head>XII</md-table-head>
+
+                  <md-table-head>Jan</md-table-head>
+                  <md-table-head>Feb</md-table-head>
+                  <md-table-head>Mar</md-table-head>
+                  <md-table-head>Apr</md-table-head>
+                  <md-table-head>May</md-table-head>
+                  <md-table-head>Jun</md-table-head>
+                  <md-table-head>Jul</md-table-head>
+                  <md-table-head>Aug</md-table-head>
+                  <md-table-head>Sep</md-table-head>
+                  <md-table-head>Oct</md-table-head>
+                  <md-table-head>Nov</md-table-head>
+                  <md-table-head>Dec</md-table-head>
                 </md-table-row>
 
                 <md-table-row v-if="balances['ETH']">
@@ -50,7 +50,6 @@
                          style="height: 24px; margin-right: 3px;"> ETH
                   </md-table-cell>
                   <md-table-cell><b>{{balances['ETH'][12] | fullEthToUsd}}</b></md-table-cell>
-                  <md-table-cell><b>{{balances['ETH'][77] | fullEthToUsd}}</b></md-table-cell>
                   <md-table-cell v-for="i in 12" :key="i">
                       <md-button class="md-fab md-mini" style="color: white;" v-if="balances['ETH'] && balances['ETH'][i - 1] > 0"
                                  @click="transfer(balances['ETH'][i - 1], i-1)">
@@ -66,7 +65,7 @@
                        style="height: 24px; margin-right: 3px; margin-top: -3px;"> DAI
                 </md-table-cell>
                 <md-table-cell><b>0</b></md-table-cell>
-                <md-table-cell><b>0 ($0)</b></md-table-cell>
+
                 <md-table-cell v-for="i in 12" :key="i">-</md-table-cell>
               </md-table-row>
               </md-table>
