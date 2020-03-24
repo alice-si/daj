@@ -17,6 +17,7 @@ contract FutureToken is IERC1155 {
 
   uint256 internal constant MAX_RATE = 10000;
   uint256 internal constant INTERESTS_SLOT = 7777777;
+  address public constant ETHER = address(0xE);
 
   /**
   * @dev emitted after the redeem action
@@ -38,12 +39,16 @@ contract FutureToken is IERC1155 {
   //An oracle authorized to set interest rates
   address public interestRatesOracle;
 
+  //A original asset that is going to be deposited and redeemed
+  address public originalAsset;
+
   //Current interest rate for new deposits and time-travelling
   uint256 public interestRate;
 
-  constructor(address _interestRatesOracle, IExternalPool _externalPool) public {
+  constructor(address _interestRatesOracle, IExternalPool _externalPool, address _originalAsset) public {
     externalPool = _externalPool;
     interestRatesOracle = _interestRatesOracle;
+    originalAsset = _originalAsset;
   }
 
   function setInterestRates(uint _newRate) external onlyInterestRatesOracle {
@@ -55,12 +60,17 @@ contract FutureToken is IERC1155 {
    * @dev validates the transfer before allowing it. NOTE: This is not standard ERC20 behavior
    **/
   function deposit(uint256 _amount, uint256 periodDiff) external payable {
-    uint256 interests = getWarpPrice(_amount, periodDiff, true);
+    uint256 interests = getWarpPrice(_amount, periodDiff);
     uint256 currentPeriod = this.getCurrentPeriod();
 
     //Deposit to lending pool
     uint256 lendingPoolDeposit = _amount.sub(interests);
-    externalPool.deposit.value(lendingPoolDeposit)(lendingPoolDeposit);
+    if (originalAsset == ETHER) {
+      require(msg.value >= _amount, "Not enough ether attached to the transaction");
+      externalPool.deposit.value(lendingPoolDeposit)(lendingPoolDeposit);
+    } else {
+      externalPool.deposit.value(lendingPoolDeposit)(lendingPoolDeposit);
+    }
 
     //Update internal ledger
     _mint(msg.sender, currentPeriod.add(periodDiff), _amount);
@@ -92,7 +102,7 @@ contract FutureToken is IERC1155 {
 
     bool isForward = _periodTo > _periodFrom;
     uint256 periodDiff = isForward ? _periodTo.sub(_periodFrom): _periodFrom.sub(_periodTo);
-    uint256 warpPrice = getWarpPrice(_amount, periodDiff, isForward);
+    uint256 warpPrice = getWarpPrice(_amount, periodDiff);
 
     if (isForward) {
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].add(warpPrice);
@@ -100,8 +110,13 @@ contract FutureToken is IERC1155 {
     } else {
       uint256 effectivePrice = warpPrice > balances[INTERESTS_SLOT][msg.sender] ? balances[INTERESTS_SLOT][msg.sender] : warpPrice;
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].sub(effectivePrice);
-      //Add missing deposit to Aave pool
-      externalPool.deposit(warpPrice);
+      if (originalAsset == ETHER) {
+        require(msg.value >= warpPrice, "Not enough ether attached to the transaction");
+        externalPool.deposit.value(warpPrice)(warpPrice);
+      } else {
+        externalPool.deposit(warpPrice);
+      }
+
     }
 
     balances[_periodFrom][msg.sender] = balances[_periodFrom][msg.sender].sub(_amount);
@@ -115,13 +130,9 @@ contract FutureToken is IERC1155 {
   }
 
 
-  function getWarpPrice(uint256 _amount, uint256 _periodDiff, bool isForward) public view returns(uint256) {
+  function getWarpPrice(uint256 _amount, uint256 _periodDiff) public view returns(uint256) {
     uint256 formula = MAX_RATE.add(interestRate.mul(_periodDiff).div(12));
-    if (isForward) {
-        return _amount.sub(_amount.mul(MAX_RATE).div(formula));
-    } else {
-        return _amount.mul(formula).div(MAX_RATE).sub(_amount);
-    }
+    return _amount.mul(formula).div(MAX_RATE).sub(_amount);
   }
 
   /**

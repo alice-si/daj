@@ -25,16 +25,6 @@ contract('Future token ETH', function ([owner, oracle]) {
   });
 
 
-
-  it("should calculate warping prices", async function () {
-    let base = 1000000000;
-    let priceForward = await ft.getWarpPrice(base, 12, true);
-    console.log("Price forward: " + priceForward);
-    let priceBackward = await ft.getWarpPrice(base-priceForward, 12, false);
-    console.log("Price backward: " + priceBackward);
-  });
-
-
   it("should deposit in current period", async function () {
     (await ft.balanceOf(owner, 0)).should.be.bignumber.equal('0');
 
@@ -64,19 +54,15 @@ contract('Future token ETH', function ([owner, oracle]) {
 
   it("should warp money", async function () {
     let wei50 = web3.utils.toWei("50", 'ether');
-    (await ft.getWarpPrice(wei50, 6, true)).should.be.bignumber.equal('2380952380952380953');
 
     await ft.warp(wei50, 2, 8);
 
     (await ft.balanceOf(owner, 2)).should.be.bignumber.equal('0');
-    (await ft.getTotalInterests()).should.be.bignumber.equal('2380952380952380953');
     (await ft.balanceOf(owner, 8)).should.be.bignumber.equal(wei50);
   });
 
   it("should warp back money", async function () {
     let wei50 = web3.utils.toWei("50", 'ether');
-
-    (await ft.getWarpPrice(wei50, 6, false)).should.be.bignumber.equal('2500000000000000000');
 
     await ft.warp(wei50, 8, 2);
 
