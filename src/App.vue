@@ -1,7 +1,7 @@
 <template>
   <md-app id="app">
     <md-app-toolbar class="md-primary">
-      <span class="md-title">DAJ</span>
+      <span class="md-title">BLAZAR</span>
 
 
 
