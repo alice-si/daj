@@ -20,12 +20,7 @@ export async function getTreasures() {
   return treasure;
 }
 
-export async function ethToUsd(val) {
-  let price = await  getEtherPrice();
-  return val * price;
-}
-
-export async function getEtherPrice() {
+export async function getEthPrice() {
   let response = await fetch(ETH_QUERY_URL);
   let data = await response.json();
   return data.USD;

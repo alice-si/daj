@@ -34,7 +34,10 @@
           v-model="time">
         </range-slider>
 
-        <div class="text">and get <b> {{interest}} </b> {{selectedCurrency.code && selectedCurrency.code.toUpperCase()}} ( $<b>{{interestsUSD}}</b> ) now!</div>
+        <div class="text">and get <b> {{interest}} </b> {{selectedCurrency.code && selectedCurrency.code.toUpperCase()}}
+          <span v-if="selectedCurrency.code == 'eth'">( <b>{{ interest | ethToUsd}}</b> )</span>
+
+          now!</div>
 
         <div style="text-align: center">
           <md-button id="deposit-button" class="md-raised md-accent" @click="makeDeposit">Deposit</md-button>
@@ -52,7 +55,7 @@
           <md-card-header-text>
             <div class="md-title">ETH</div>
             <div class="md-subhead"><b>5%</b> APY</div>
-            Balance: <b>{{balance.eth.toFixed(3)}} </b>
+            Balance: <b>{{balance.eth | fullEthToUsd}}</b>
           </md-card-header-text>
 
           <md-card-media>
@@ -119,7 +122,6 @@
             code: 'eth',
             title: 'ETH',
             rate: 5,
-            price: 119,
             step: 0.01,
             precision: 3
           },
@@ -128,7 +130,6 @@
             code: 'dai',
             title: 'DAI',
             rate: 10,
-            price: 1,
             step: 0.1,
             precision: 2
           }
@@ -148,9 +149,6 @@
       // a computed getter
       interest: function () {
         return (this.deposit - (this.deposit/((100+(this.selectedCurrency.rate*this.time/12))/100))).toFixed(this.precision)
-      },
-      interestsUSD: function() {
-        return ((this.deposit - (this.deposit/((100+(this.selectedCurrency.rate*this.time/12))/100)))*this.selectedCurrency.price).toFixed(2);
       }
     },
     beforeCreate: async function () {

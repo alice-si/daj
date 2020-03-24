@@ -44,13 +44,13 @@
                   <md-table-head>XII</md-table-head>
                 </md-table-row>
 
-                <md-table-row>
+                <md-table-row v-if="balances['ETH']">
                   <md-table-cell>
                     <img src="https://testnet.aave.com/static/media/eth.1a64eee6.svg"
                          style="height: 24px; margin-right: 3px;"> ETH
                   </md-table-cell>
-                  <md-table-cell><b>{{balances['ETH'] && balances['ETH'][12] && balances['ETH'][12].toFixed(2)}}</b></md-table-cell>
-                  <md-table-cell><b>{{balances['ETH'][77] && balances['ETH'][77].toFixed(5)}} (${{balances[77] && (balances[77]*223).toFixed(2)}})</b></md-table-cell>
+                  <md-table-cell><b>{{balances['ETH'][12] | fullEthToUsd}}</b></md-table-cell>
+                  <md-table-cell><b>{{balances['ETH'][77] | fullEthToUsd}}</b></md-table-cell>
                   <md-table-cell v-for="i in 12" :key="i">
                       <md-button class="md-fab md-mini" style="color: white;" v-if="balances['ETH'] && balances['ETH'][i - 1] > 0"
                                  @click="transfer(balances['ETH'][i - 1], i-1)">

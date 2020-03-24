@@ -32,7 +32,7 @@
                      style="height: 24px; margin-right: 3px;"> ETH
               </md-table-cell>
               <md-table-cell>Aave</md-table-cell>
-              <md-table-cell><b>{{treasure.ETH}}</b></md-table-cell>
+              <md-table-cell><b>{{treasure.ETH | fullEthToUsd}}</b></md-table-cell>
 
             </md-table-row>
 

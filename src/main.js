@@ -6,6 +6,7 @@ import router from './router'
 import VueMaterial from 'vue-material'
 import Vue2Filters from 'vue2-filters'
 import Toasted from 'vue-toasted';
+import { getEthPrice } from './blockchain/stats';
 
 
 Vue.use(Vue2Filters)
@@ -23,4 +24,22 @@ window.addEventListener('load', function () {
     components: { App}
   })
 })
+
+async function setupFilters() {
+  let ethPrice = await getEthPrice();
+  console.log("Current ETH price: " + ethPrice);
+  Vue.filter('ethToUsd', function (value) {
+    if (!value) return ''
+    value = value * ethPrice;
+    return "$" + value.toFixed(2);
+  })
+  Vue.filter('fullEthToUsd', function (value) {
+    if (!value) return '';
+    let val = parseFloat(value);
+    let usd = val * ethPrice;
+    return val.toFixed(3) + " ($" + usd.toFixed(2) + ")";
+  })
+};
+
+setupFilters();
 
