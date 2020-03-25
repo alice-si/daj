@@ -9,8 +9,8 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 interface IAssetBacked {
 
-  function isEthBacked() external returns(bool);
+  function isEthBacked() external view returns(bool);
 
-  function backingAsset() external returns(IERC20);
+  function backingAsset() external view returns(IERC20);
 
 }

@@ -6,10 +6,11 @@ const CURRENCIES = ['ETH'];
 const ETH_QUERY_URL = 'https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD&api_key=88ef2a2548eace3ed76a7b5f2999c24fd90a204df704d3773fc0c76caa587c52';
 
 async function getTreasure(currency) {
-  let pool = await getExternalPool(currency);
-  let b = await pool.balanceOf(pool.address);
-  let treasure = web3.fromWei(b, 'ether');
-  return treasure;
+  // let pool = await getExternalPool(currency);
+  // let b = await pool.balanceOf();
+  // let treasure = web3.fromWei(b, 'ether');
+  // return treasure;
+  return "?";
 }
 
 export async function getTreasures() {

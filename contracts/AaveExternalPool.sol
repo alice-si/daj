@@ -1,51 +1,66 @@
 pragma solidity ^0.5.0;
 
-import "./IExternalPool.sol";
 
-/************
-@title IExternalPool interface
-@notice Interface for connection to external lending pools;
-*/
-
+import "./BaseExternalPool.sol";
 import "./aave/tokenization/AToken.sol";
 import "./aave/lendingpool/LendingPool.sol";
-import "./aave/libraries/EthAddressLib.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "./AaveKovanDeployment.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract AaveExternalPool is IExternalPool {
+/***
+  @title AaveExternalPool
+  @notice Contract forwading deposits to the Aave liquidity pool
+*/
+contract AaveExternalPool is BaseExternalPool, Ownable {
 
-  address public reserve;
   LendingPool public lendingPool;
 
-  constructor(address _reserve, LendingPool _lendingPool) public {
-    reserve = _reserve;
+  mapping(address => address) internal tokenReserves;
+
+  constructor(LendingPool _lendingPool) public {
     lendingPool = _lendingPool;
+
+    //Setting Kovan reserve (should be moved to deployer)
+    setReserve(ETHER, AaveKovanDeployment.ethAddress());
+    setReserve(AaveKovanDeployment.daiAddress(), AaveKovanDeployment.daiAddress());
+  }
+
+  function setReserve(address token, address reserve) internal {
+    tokenReserves[token] = reserve;
+    if (token != ETHER) {
+      IERC20(token).approve(address(lendingPool), UINT256_MAX);
+    }
+  }
+
+  function reserve() internal view returns(address) {
+    return tokenReserves[address(backingAsset())];
   }
 
   function deposit(uint256 amount) external payable {
-    if (reserve == EthAddressLib.ethAddress()) {
-      lendingPool.deposit.value(amount)(reserve, amount, 0);
+    if (isEthBacked()) {
+      lendingPool.deposit.value(amount)(reserve(), amount, 0);
     } else {
-      lendingPool.deposit(reserve, amount, 0);
+      lendingPool.deposit(reserve(), amount, 0);
     }
   }
 
   function withdraw(uint256 amount, address payable beneficiary) external {
     address aTokenAddress;
-    ( , , , , , , , , , , ,aTokenAddress, ) = lendingPool.getReserveData(reserve);
+    ( , , , , , , , , , , ,aTokenAddress, ) = lendingPool.getReserveData(reserve());
     AToken aToken = AToken(aTokenAddress);
     aToken.redeem(amount);
-    if (reserve == EthAddressLib.ethAddress()) {
+    if (isEthBacked()) {
       beneficiary.transfer(amount);
     } else {
-      ERC20 depositedToken = ERC20(aToken.underlyingAssetAddress());
+      IERC20 depositedToken = IERC20(aToken.underlyingAssetAddress());
       depositedToken.transfer(beneficiary, amount);
     }
   }
 
   function balanceOf(address account) external view returns(uint256) {
     address aTokenAddress;
-    ( , , , , , , , , , , ,aTokenAddress, ) = lendingPool.getReserveData(reserve);
+    ( , , , , , , , , , , ,aTokenAddress, ) = lendingPool.getReserveData(reserve());
     AToken aToken = AToken(aTokenAddress);
     return aToken.balanceOf(account);
   }

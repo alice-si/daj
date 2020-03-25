@@ -175,7 +175,7 @@
       makeDeposit: async function () {
         this.showModal = true;
         try {
-          await makeDeposit(this.deposit, this.time);
+          await makeDeposit(this.deposit, this.time, this.selectedCurrency.title);
           this.$router.push({path: '/future'});
           let toast = this.$toasted.show("You've just earned $" + this.interestsUSD + " interests !", {
             theme: "bubble",

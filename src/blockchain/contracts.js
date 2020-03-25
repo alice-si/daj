@@ -52,22 +52,19 @@ export async function getInterestRatesStrategy() {
 
 
 export async function getFutureToken(currency) {
+  console.log("Getting future token contract for: " + currency);
   if (ft === undefined) {
     let FT = await setup(FUTURE_TOKEN_JSON);
-    ft = await FT.at(deployment['FUTURE_TOKEN_' +currency]);
+    ft = await FT.at(deployment['FUTURE_TOKEN_' + currency]);
     console.log("Linked future token " + currency + ": " + ft.address);
   }
   return ft;
 }
 
 
-export async function getExternalPool(currency) {
-  let ft = await getFutureToken(currency);
-  //let externalPoolAddress = await ft.externalPool();
-  let externalPoolAddress = "0x00Ca1D94B89E1281218c4F50c74b424A559Cb67b";
-
+export async function getExternalPool() {
   let EXTERNAL_POOL = await getAAVE_EXTERNAL_POOL();
-  let pool = await EXTERNAL_POOL.at(externalPoolAddress);
+  let pool = await EXTERNAL_POOL.at(deployment.A_EXTERNAL_POOL);
   return pool;
 }
 

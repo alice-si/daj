@@ -1,26 +1,15 @@
 pragma solidity ^0.5.0;
 
-import "./IExternalPool.sol";
-import "./IAssetBacked.sol";
+import "./BaseExternalPool.sol";
 
 /************
 @title MockExternalPool
 @notice Mock implementation of external lending pool for test purpose
 */
 
-contract MockExternalPool is IExternalPool {
+contract MockExternalPool is BaseExternalPool {
 
   uint256 balance;
-
-  function isEthBacked() internal returns(bool) {
-    IAssetBacked callee = IAssetBacked(msg.sender);
-    return callee.isEthBacked();
-  }
-
-  function backingAsset() internal returns(IERC20) {
-    IAssetBacked callee = IAssetBacked(msg.sender);
-    return callee.backingAsset();
-  }
 
   function deposit(uint256 amount) external payable {
     balance += amount;
@@ -38,6 +27,5 @@ contract MockExternalPool is IExternalPool {
   function balanceOf(address account) external view returns(uint256) {
     return balance;
   }
-
 
 }

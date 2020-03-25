@@ -51,6 +51,8 @@ contract FutureToken is IERC1155, IAssetBacked {
     externalPool = _externalPool;
     interestRatesOracle = _interestRatesOracle;
     originalAsset = _originalAsset;
+    //DEFAULT_RATE
+    interestRate = 1200;
   }
 
   function setInterestRates(uint _newRate) external onlyInterestRatesOracle {
@@ -194,11 +196,11 @@ contract FutureToken is IERC1155, IAssetBacked {
     return balances[INTERESTS_SLOT][msg.sender];
   }
 
-  function isEthBacked() external returns(bool) {
+  function isEthBacked() external view returns(bool) {
     return originalAsset == ETHER;
   }
 
-  function backingAsset() external returns(IERC20) {
+  function backingAsset() external view returns(IERC20) {
     return IERC20(originalAsset);
   }
 

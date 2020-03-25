@@ -13,9 +13,9 @@ export async function getLendingData() {
   console.log(data);
 }
 
-export async function makeDeposit(_amount, _time) {
+export async function makeDeposit(_amount, _time, _currency) {
   console.log("Depositing: " + _amount + " for: " + _time + " months");
-  let ft = await getFutureToken();
+  let ft = await getFutureToken(_currency);
   let wei = web3.toWei(_amount / SCALING_FACTOR, 'ether');
   let tx = await ft.deposit(wei, _time, {value: wei});
 
@@ -31,13 +31,13 @@ export async function spaceTransfer(_to, _id, _amount) {
   console.log(tx);
 }
 
-export async function timeTransfer(_to, _id, _amount) {
+export async function timeTransfer(_to, _id, _amount, _currency) {
   console.log("Transferring in time: " + _amount + " to: " + _to + " from period: " + _id);
-  let fc = await getFutureToken();
+  let ft = await getFutureToken(_currency);
   let wei = web3.toWei(_amount / SCALING_FACTOR, 'ether');
-  let price = _to < _id ? await fc.getWarpPrice(wei, _id - _to, false) : 0;
+  let price = _to < _id ? await ft.getWarpPrice(wei, _id - _to) : 0;
   console.log("Paying price: " + price);
-  let tx = await fc.warp(wei, _id, _to, {value: price});
+  let tx = await ft.warp(wei, _id, _to, {value: price});
 
   console.log(tx);
 }

@@ -65,7 +65,7 @@
 <script>
   import {getLendingData, makeDeposit} from '@/blockchain/futureToken'
   import {getLendingConfig, getReserveData, depositDai} from '@/blockchain/aave'
-  import {deployAaveEthPool, deployFutureEthToken} from '@/blockchain/deployer'
+  import {deployAaveExternalPool, deployFutureEthToken} from '@/blockchain/deployer'
   import {getTreasures, ethToUsd} from '@/blockchain/stats'
 
 
@@ -78,7 +78,7 @@
     },
     methods: {
       deployAaveEthExternalPool: async function () {
-        await deployAaveEthPool();
+        await deployAaveExternalPool();
       },
       deployFutureEthToken: async function () {
         await deployFutureEthToken();
