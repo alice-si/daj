@@ -9,7 +9,7 @@ contract('Future token ETH', function ([owner, oracle]) {
   var ft, currentPeriod, pool;
 
   before("deploy future token", async function () {
-    pool = await MockPool.new();
+    pool = await MockPool.new(ETH_ADDRESS);
     ft = await FT.new(oracle, pool.address, ETH_ADDRESS);
   });
 

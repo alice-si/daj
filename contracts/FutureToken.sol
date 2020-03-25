@@ -4,6 +4,7 @@ pragma solidity ^0.5.0;
 import "./aave/libraries/WadRayMath.sol";
 import "./Calendar.sol";
 import "./IExternalPool.sol";
+import "./IAssetBacked.sol";
 import "erc-1155/contracts/IERC1155.sol";
 
 
@@ -11,7 +12,7 @@ import "erc-1155/contracts/IERC1155.sol";
  * @title Future Token
  *
  */
-contract FutureToken is IERC1155 {
+contract FutureToken is IERC1155, IAssetBacked {
   using WadRayMath for uint256;
   using SafeMath for uint256;
 
@@ -65,7 +66,7 @@ contract FutureToken is IERC1155 {
 
     //Deposit to lending pool
     uint256 lendingPoolDeposit = _amount.sub(interests);
-    if (originalAsset == ETHER) {
+    if (this.isEthBacked()) {
       require(msg.value >= _amount, "Not enough ether attached to the transaction");
       externalPool.deposit.value(lendingPoolDeposit)(lendingPoolDeposit);
     } else {
@@ -110,7 +111,7 @@ contract FutureToken is IERC1155 {
     } else {
       uint256 effectivePrice = warpPrice > balances[INTERESTS_SLOT][msg.sender] ? balances[INTERESTS_SLOT][msg.sender] : warpPrice;
       balances[INTERESTS_SLOT][msg.sender] = balances[INTERESTS_SLOT][msg.sender].sub(effectivePrice);
-      if (originalAsset == ETHER) {
+      if (this.isEthBacked()) {
         require(msg.value >= warpPrice, "Not enough ether attached to the transaction");
         externalPool.deposit.value(warpPrice)(warpPrice);
       } else {
@@ -189,6 +190,10 @@ contract FutureToken is IERC1155 {
 
   function getTotalInterests() external view returns (uint256) {
     return balances[INTERESTS_SLOT][msg.sender];
+  }
+
+  function isEthBacked() external returns(bool) {
+    return originalAsset == ETHER;
   }
 
   /**
