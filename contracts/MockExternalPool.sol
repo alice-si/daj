@@ -10,12 +10,16 @@ import "./IAssetBacked.sol";
 
 contract MockExternalPool is IExternalPool {
 
-  address public token;
   uint256 balance;
 
   function isEthBacked() internal returns(bool) {
     IAssetBacked callee = IAssetBacked(msg.sender);
     return callee.isEthBacked();
+  }
+
+  function backingAsset() internal returns(IERC20) {
+    IAssetBacked callee = IAssetBacked(msg.sender);
+    return callee.backingAsset();
   }
 
   function deposit(uint256 amount) external payable {
@@ -26,6 +30,8 @@ contract MockExternalPool is IExternalPool {
     balance -= amount;
     if (isEthBacked()) {
       beneficiary.transfer(amount);
+    } else {
+      backingAsset().transfer(beneficiary, amount);
     }
   }
 

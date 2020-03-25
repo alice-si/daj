@@ -6,6 +6,7 @@ import "./Calendar.sol";
 import "./IExternalPool.sol";
 import "./IAssetBacked.sol";
 import "erc-1155/contracts/IERC1155.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 
 /**
@@ -69,16 +70,16 @@ contract FutureToken is IERC1155, IAssetBacked {
     if (this.isEthBacked()) {
       require(msg.value >= _amount, "Not enough ether attached to the transaction");
       externalPool.deposit.value(lendingPoolDeposit)(lendingPoolDeposit);
+      //Return instant interests
+      msg.sender.transfer(interests);
     } else {
-      externalPool.deposit.value(lendingPoolDeposit)(lendingPoolDeposit);
+      IERC20(originalAsset).transferFrom(msg.sender, address(externalPool), lendingPoolDeposit);
+      externalPool.deposit(lendingPoolDeposit);
     }
 
     //Update internal ledger
     _mint(msg.sender, currentPeriod.add(periodDiff), _amount);
     _mint(msg.sender, INTERESTS_SLOT, interests);
-
-    //Return instant interests
-    msg.sender.transfer(interests);
 
     emit Deposit(msg.sender, _amount, interests);
   }
@@ -116,6 +117,7 @@ contract FutureToken is IERC1155, IAssetBacked {
         externalPool.deposit.value(warpPrice)(warpPrice);
       } else {
         externalPool.deposit(warpPrice);
+        IERC20(originalAsset).transferFrom(msg.sender, address(externalPool), warpPrice);
       }
 
     }
@@ -194,6 +196,10 @@ contract FutureToken is IERC1155, IAssetBacked {
 
   function isEthBacked() external returns(bool) {
     return originalAsset == ETHER;
+  }
+
+  function backingAsset() external returns(IERC20) {
+    return IERC20(originalAsset);
   }
 
   /**
