@@ -64,4 +64,6 @@ contract AaveExternalPool is BaseExternalPool, Ownable {
     AToken aToken = AToken(aTokenAddress);
     return aToken.balanceOf(account);
   }
+
+  function () external payable {}
 }
