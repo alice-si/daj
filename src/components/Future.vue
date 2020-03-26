@@ -52,21 +52,26 @@
                   <md-table-cell><b>{{balances['ETH'][12] | fullEthToUsd}}</b></md-table-cell>
                   <md-table-cell v-for="i in 12" :key="i">
                       <md-button class="md-fab md-mini" style="color: white;" v-if="balances['ETH'] && balances['ETH'][i - 1] > 0"
-                                 @click="transfer(balances['ETH'][i - 1], i-1)">
+                                 @click="transfer(balances['ETH'][i - 1], i-1, 'ETH')">
                         {{balances['ETH'][i - 1]}}
                       </md-button>
                     <span v-else>-</span>
                   </md-table-cell>
                 </md-table-row>
 
-              <md-table-row>
+              <md-table-row v-if="balances['DAI']">
                 <md-table-cell>
                   <img src="https://testnet.aave.com/static/media/dai.59d423e0.svg"
                        style="height: 24px; margin-right: 3px; margin-top: -3px;"> DAI
                 </md-table-cell>
-                <md-table-cell><b>0</b></md-table-cell>
+                <md-table-cell><b>{{balances['DAI'][12].toFixed(2)}}</b></md-table-cell>
 
-                <md-table-cell v-for="i in 12" :key="i">-</md-table-cell>
+                <md-table-cell v-for="i in 12" :key="i">
+                  <md-button class="md-fab md-mini" style="color: white;" v-if="balances['DAI'][i - 1] > 0"
+                             @click="transfer(balances['DAI'][i - 1], i-1, 'DAI')">
+                    {{balances['DAI'][i - 1].toFixed(2)}}
+                  </md-button>
+                </md-table-cell>
               </md-table-row>
               </md-table>
 
@@ -177,6 +182,7 @@
         showTransferDialog: false,
         selectedMax: 0,
         selectedPeriod: 0,
+        selectedCurrency: '',
         spaceAddress: "",
         spaceValue: 0,
         showSpaceTransferModal: false,
@@ -202,18 +208,19 @@
       this.balances = await getBalances();
     },
     methods: {
-      transfer(val, period) {
+      transfer(val, period, currency) {
         this.selectedMax = val;
         this.selectedPeriod = period;
+        this.selectedCurrency = currency;
         this.timeTarget = period + 1;
-        console.log("Transferring max: " + this.selectedMax + " from: " + this.selectedPeriod);
+        console.log("Transferring " + this.selectedCurrency + " max: " + this.selectedMax + " from: " + this.selectedPeriod);
         this.showTransferDialog = true;
       },
       transferInSpace: async function () {
         console.log("Transferring in space: " + this.spaceValue + " to: " + this.spaceAddress);
         this.showTransferDialog = false;
         this.showSpaceTransferModal = true;
-        await spaceTransfer(this.spaceAddress, this.selectedPeriod, this.spaceValue);
+        await spaceTransfer(this.spaceAddress, this.selectedPeriod, this.spaceValue, this.selectedCurrency);
         this.showSpaceTransferModal = false;
         this.balances = await getBalances();
       },
@@ -222,7 +229,7 @@
         this.showTransferDialog = false;
         this.showTimeTransferModal = true;
         try {
-          await timeTransfer(this.timeTarget -1, this.selectedPeriod, this.timeValue);
+          await timeTransfer(this.timeTarget -1, this.selectedPeriod, this.timeValue, this.selectedCurrency);
           if (this.timeTarget -1 > this.selectedPeriod) {
             let toast = this.$toasted.show("You've just earned $" + (this.price*223).toFixed(2) + " interests !", {
               theme: "bubble",

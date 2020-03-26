@@ -45,13 +45,12 @@ export async function spaceTransfer(_to, _id, _amount) {
 }
 
 export async function timeTransfer(_to, _id, _amount, _currency) {
-  console.log("Transferring in time: " + _amount + " to: " + _to + " from period: " + _id);
+  console.log("Transferring " + _currency + " in time: " + _amount + " to: " + _to + " from period: " + _id);
   let ft = await getFutureToken(_currency);
   let wei = web3.toWei(_amount / SCALING_FACTOR, 'ether');
   let price = _to < _id ? await ft.getWarpPrice(wei, _id - _to) : 0;
   console.log("Paying price: " + price);
-  let tx = await ft.warp(wei, _id, _to, {value: price});
-
+  let tx = await ft.warp(wei, _id, _to, {value: _currency === 'ETH' ? price : 0});
   console.log(tx);
 }
 
@@ -68,7 +67,6 @@ async function getBalance(account, currency) {
   let ft = await getFutureToken(currency);
   let rawBalances = await ft.balancesOfYear(account);
 
-
   let total = 0;
   let balances = rawBalances.map(b => {
     let f = web3.fromWei(b, 'ether') * SCALING_FACTOR;
@@ -76,12 +74,11 @@ async function getBalance(account, currency) {
     return f;
   });
 
-
   balances[12] = total;
-  if (total > 0) {
-    let rawInterests = await ft.getTotalInterests();
-    balances[77] = web3.fromWei(rawInterests, 'ether') * SCALING_FACTOR;
-  }
+  // if (total > 0) {
+  //   let rawInterests = await ft.getTotalInterests();
+  //   balances[77] = web3.fromWei(rawInterests, 'ether') * SCALING_FACTOR;
+  // }
   console.log(balances);
   return balances;
 }
@@ -91,5 +88,6 @@ export async function getBalances() {
   let main = await getMainAccount();
   var balances = {};
   balances['ETH'] = await getBalance(main, 'ETH');
+  balances['DAI'] = await getBalance(main, 'DAI');
   return balances;
 }

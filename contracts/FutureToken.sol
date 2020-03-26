@@ -118,8 +118,8 @@ contract FutureToken is IERC1155, IAssetBacked {
         require(msg.value >= warpPrice, "Not enough ether attached to the transaction");
         externalPool.deposit.value(warpPrice)(warpPrice);
       } else {
-        externalPool.deposit(warpPrice);
         IERC20(originalAsset).transferFrom(msg.sender, address(externalPool), warpPrice);
+        externalPool.deposit(warpPrice);
       }
 
     }
