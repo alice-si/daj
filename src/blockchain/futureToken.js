@@ -1,4 +1,4 @@
-import {getFutureToken} from "./contracts.js";
+import {getFutureToken, getBackingToken} from "./contracts.js";
 import {getMainAccount} from "./network";
 
 const SCALING_FACTOR = 1;
@@ -14,12 +14,25 @@ export async function getLendingData() {
 }
 
 export async function makeDeposit(_amount, _time, _currency) {
-  console.log("Depositing: " + _amount + " for: " + _time + " months");
+  console.log("Depositing: " + _amount + " of: " + _currency + " for: " + _time + " months");
   let ft = await getFutureToken(_currency);
   let wei = web3.toWei(_amount / SCALING_FACTOR, 'ether');
-  let tx = await ft.deposit(wei, _time, {value: wei});
 
-  console.log(tx);
+  if (_currency !== 'ETH') {
+    let main = await getMainAccount();
+    let bt = await getBackingToken(_currency);
+    let allowance = await bt.allowance(main, ft.address);
+    console.log("Allowance of " + _currency + " : " + web3.fromWei(allowance, 'ether'));
+    if (allowance == 0) {
+      await bt.approve(ft.address, web3.toWei(1000, 'ether'));
+    }
+    let tx = await ft.deposit(wei, _time);
+    console.log(tx);
+  } else {
+    let tx = await ft.deposit(wei, _time, {value: wei});
+    console.log(tx);
+  }
+
 }
 
 export async function spaceTransfer(_to, _id, _amount) {

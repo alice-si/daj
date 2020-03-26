@@ -29,7 +29,8 @@ contract AaveExternalPool is BaseExternalPool, Ownable {
   function setReserve(address token, address reserve) internal {
     tokenReserves[token] = reserve;
     if (token != ETHER) {
-      IERC20(token).approve(address(lendingPool), UINT256_MAX);
+      address core = address(lendingPool.core());
+      IERC20(token).approve(core, UINT256_MAX);
     }
   }
 

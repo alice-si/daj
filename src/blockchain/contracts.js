@@ -21,7 +21,9 @@ var setup = async function(json) {
   return c;
 };
 
-var ft, ir, dai, pool;
+var ir, dai, pool;
+let ft = {};
+let bt = {};
 
 export async function getFUTURE_TOKEN() {
   return await setup(FUTURE_TOKEN_JSON);
@@ -29,6 +31,10 @@ export async function getFUTURE_TOKEN() {
 
 export async function getAAVE_EXTERNAL_POOL() {
   return await setup(AAVE_EXTERNAL_POOL_JSON);
+}
+
+export async function getERC20() {
+  return await setup(ERC20_JSON);
 }
 
 
@@ -53,12 +59,25 @@ export async function getInterestRatesStrategy() {
 
 export async function getFutureToken(currency) {
   console.log("Getting future token contract for: " + currency);
-  if (ft === undefined) {
+  if (ft[currency] === undefined) {
     let FT = await setup(FUTURE_TOKEN_JSON);
-    ft = await FT.at(deployment['FUTURE_TOKEN_' + currency]);
-    console.log("Linked future token " + currency + ": " + ft.address);
+    ft[currency] = await FT.at(deployment['FUTURE_TOKEN_' + currency]);
+    console.log("Linked future token " + currency + ": " + ft[currency].address);
   }
-  return ft;
+  return ft[currency];
+}
+
+
+export async function getBackingToken(currency) {
+  console.log("Getting backing token contract for: " + currency);
+  if (bt[currency] === undefined) {
+    let ft = await getFutureToken(currency);
+    let address = await ft.backingAsset();
+    let ERC20 = await getERC20();
+    bt[currency] = await ERC20.at(address);
+    console.log("Linked backing token " + currency + ": " + bt[currency].address);
+  }
+  return bt[currency];
 }
 
 
@@ -71,7 +90,7 @@ export async function getExternalPool() {
 
 export async function getDaiToken() {
   if (dai === undefined) {
-    let DAI = await setup(ERC20_JSON);
+    let DAI = await getERC20();
     dai = await DAI.at(deployment.DAI);
     console.log("Linked dai token: " + dai.address);
   }
